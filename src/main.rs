@@ -1,55 +1,49 @@
-trait Observer {
-    fn notify(&self, data: &str);
-}
+mod routes; // This module likely handles incoming requests for orders or other functionalities (unseen in this code).
+mod observer_processor; // This module contains the Observer pattern implementation for order processing.
+mod handlers; // This module might handle specific actions related to orders (unseen in this code).
 
-struct ConcreteObserver {
-    name: String,
-}
+use std::sync::Arc; // Arc (Atomically Reference Counted) is used for thread-safe shared ownership.
 
-impl ConcreteObserver {
-    fn new(name: &str) -> Self {
-        Self {
-            name: name.to_string(),
-        }
-    }
-}
+use crate::observer_processor::{ // Import specific components from the observer_processor module
+    Order,      // Represents an order placed by a customer.
+    Observer,   // Interface for objects that can be notified about order changes.
+    EmailNotifier,  // Sends email notifications about order status.
+    LogisticsManager, // Handles logistics tasks related to orders.
+    PaymentProcessor, // Processes payments for orders.
+    PaymentGateway,  // Interacts with the payment gateway for authorization and capture.
+    InventoryManager, // Manages inventory levels for products.
+    Subject,     // Acts as the central coordinator for notifying observers about order changes.
+};
 
-impl Observer for ConcreteObserver {
-    fn notify(&self, data: &str) {
-        println!("{} received data: {}", self.name, data);
-    }
-}
-
-struct Subject {
-    observers: Vec<Box<dyn Observer>>,
-}
-
-impl Subject {
-    fn new() -> Self {
-        Self {
-            observers: Vec::new(),
-        }
-    }
-
-    fn add_observer(&mut self, observer: Box<dyn Observer>) {
-        self.observers.push(observer);
-    }
-
-    fn notify_observers(&self, data: &str) {
-        for observer in &self.observers {
-            observer.notify(data);
-        }
-    }
-}
-
-fn main() {
+#[tokio::main]
+async fn main() {
+    // Create a new Subject instance to manage order notifications.
     let mut subject = Subject::new();
 
-    let observer1 = Box::new(ConcreteObserver::new("Observer 1"));
-    let observer2 = Box::new(ConcreteObserver::new("Observer 2"));
+    // Create thread-safe shared instances of order processing components using Arc.
+    let payment_processor = Arc::new(PaymentProcessor::new("PaymentProcessor"));
+    let payment_gateway = Arc::new(PaymentGateway::new("PaymentGateway"));
+    let inventory_manager = Arc::new(InventoryManager::new("InventoryManager"));
+    let email_notifier = Arc::new(EmailNotifier::new("EmailNotifier"));
+    let logistics_manager = Arc::new(LogisticsManager::new("LogisticsManager"));
 
-    subject.add_observer(observer1);
-    subject.add_observer(observer2);
+    // Register all observers with the Subject for order notifications.
+    subject.add_observer(payment_processor.clone()); // Clone Arc to avoid ownership issues
+    subject.add_observer(payment_gateway.clone());
+    subject.add_observer(inventory_manager.clone());
+    subject.add_observer(email_notifier.clone());
+    subject.add_observer(logistics_manager.clone());
 
-    subject.notify_observers("Hello, observers!");
+    // Simulate multiple orders
+    let orders = vec![
+        Order::new(101, "Super Widget", 10),
+        Order::new(102, "Ultra Gadget", 5),
+        Order::new(103, "Mega Toolset", 3),
+    ];
+
+    for order in orders {
+        // Place each order asynchronously using await within the loop.
+        subject.place_order(order.clone()).await;
+        println!("Completed processing for Order {}", order.order_id);
+    }
 }
