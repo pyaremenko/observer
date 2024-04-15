@@ -1,10 +1,9 @@
 use tokio::time::{sleep, Duration};
-use std::sync::Arc;
-use tokio::sync::Mutex;
+
+
 use crate::observer_processor::{ // Import specific components from the observer_processor module
     Order,      // Represents an order placed by a customer.
-    Observer,   // Interface for objects that can be notified about order changes.
-    Subject,    // Acts as the central coordinator for notifying observers about order changes.
+    Observer,    // Acts as the central coordinator for notifying observers about order changes.
 };// Define a struct for handling payment verification through a gateway.
 pub struct PaymentGateway {
     identifier: String,
@@ -35,7 +34,7 @@ impl Observer for PaymentGateway {
         })
     }
     
-    fn is_interested(&self, order: &Order) -> bool {
+    fn is_interested(&self, _order: &Order) -> bool {
         false
     }
     

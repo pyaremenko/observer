@@ -1,6 +1,6 @@
-use tokio::time::{sleep, Duration};
+
 use std::sync::Arc;
-use tokio::sync::Mutex;
+
 // Define a trait for Observer which requires a notify method.
 pub trait Observer {
     // Notify method which takes an order reference and returns a join handle.
@@ -44,9 +44,9 @@ impl Subject {
         self.observers.push(observer);
     }
 
-    pub fn remove_observer(&mut self, identifier: &str) {
-        self.observers.retain(|observer| observer.get_identifier() != identifier);
-    }
+    // pub fn remove_observer(&mut self, identifier: &str) {
+    //     self.observers.retain(|observer| observer.get_identifier() != identifier);
+    // }
 
     pub async fn notify_observers(&self, order: &Order) {
         let mut handles = vec![];

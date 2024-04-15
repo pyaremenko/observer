@@ -7,8 +7,7 @@ mod inventory_manager;
 
 use std::sync::Arc; // Arc (Atomically Reference Counted) is used for thread-safe shared ownership.
 use crate::observer_processor::{ // Import specific components from the observer_processor module
-    Order,      // Represents an order placed by a customer.
-    Observer,   // Interface for objects that can be notified about order changes.
+    Order,   // Interface for objects that can be notified about order changes.
     Subject,    // Acts as the central coordinator for notifying observers about order changes.
 };
 use crate::payment_gateway::{
