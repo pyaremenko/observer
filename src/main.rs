@@ -1,18 +1,32 @@
 mod observer_processor; // This module contains the Observer pattern implementation for order processing.
-
+mod email_notifier;
+mod logistics_manager;
+mod payment_gateway;
+mod payment_processor;
+mod inventory_manager;
 
 use std::sync::Arc; // Arc (Atomically Reference Counted) is used for thread-safe shared ownership.
-
 use crate::observer_processor::{ // Import specific components from the observer_processor module
     Order,      // Represents an order placed by a customer.
     Observer,   // Interface for objects that can be notified about order changes.
-    EmailNotifier,  // Sends email notifications about order status.
-    LogisticsManager, // Handles logistics tasks related to orders.
-    PaymentProcessor, // Processes payments for orders.
-    PaymentGateway,  // Interacts with the payment gateway for authorization and capture.
-    InventoryManager, // Manages inventory levels for products.
-    Subject,     // Acts as the central coordinator for notifying observers about order changes.
+    Subject,    // Acts as the central coordinator for notifying observers about order changes.
 };
+use crate::payment_gateway::{
+    PaymentGateway,  // Interacts with the payment gateway for authorization and capture.
+};
+use crate::logistics_manager::{
+    LogisticsManager, // Handles logistics tasks related to orders.
+};
+use crate::payment_processor::{PaymentProcessor, // Processes payments for orders.
+};
+use crate::email_notifier::{
+    EmailNotifier,  // Sends email notifications about order status.
+};
+use crate::inventory_manager::{InventoryManager, // Manages inventory levels for products.
+};
+
+
+
 
 #[tokio::main]
 async fn main() {
