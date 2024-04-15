@@ -6,6 +6,8 @@ use tokio::sync::Mutex;
 pub trait Observer {
     // Notify method which takes an order reference and returns a join handle.
     fn notify(&self, order: &Order) -> tokio::task::JoinHandle<()>;
+    fn is_interested(&self, order: &Order) -> bool;
+    fn get_identifier(&self) -> &str;
 }
 
 // Define a struct for Order with basic order details.
@@ -57,6 +59,12 @@ impl Observer for PaymentProcessor {
                      identifier, id, product, quantity);
         })
     }
+    fn is_interested(&self, _order: &Order) -> bool {
+        true // Always interested in processing payments for any order.
+    }
+    fn get_identifier(&self) -> &str {
+        &self.identifier
+    }
 }
 
 // Define a struct for handling payment verification through a gateway.
@@ -88,6 +96,14 @@ impl Observer for PaymentGateway {
                      identifier, id, product, quantity);
         })
     }
+    
+    fn is_interested(&self, order: &Order) -> bool {
+        false
+    }
+    
+    fn get_identifier(&self) -> &str {
+        &self.identifier
+    }
 }
 
 // Define a struct for handling email notifications.
@@ -116,6 +132,13 @@ impl Observer for EmailNotifier {
             sleep(Duration::from_secs(1)).await;  // Simulate email sending delay
             println!("{} sent email confirmation for Order {}: {}", identifier, id, product);
         })
+    }
+    fn is_interested(&self, order: &Order) -> bool {
+        order.quantity >= 5 // Only interested in sending emails for orders with at least 5 items.
+    }
+    
+    fn get_identifier(&self) -> &str {
+        &self.identifier
     }
 }
 
@@ -146,6 +169,14 @@ impl Observer for LogisticsManager {
             sleep(Duration::from_secs(2)).await;  // Simulate logistics planning delay
             println!("{} arranged shipping for Order {}: {} x {}", identifier, id, product, quantity);
         })
+    }
+    
+    fn is_interested(&self, order: &Order) -> bool {
+        false
+    }
+    
+    fn get_identifier(&self) -> &str {
+        &self.identifier
     }
 }
 
@@ -178,6 +209,14 @@ impl Observer for InventoryManager {
                      identifier, id, product, quantity);
         })
     }
+    
+    fn is_interested(&self, order: &Order) -> bool {
+        false
+    }
+    
+    fn get_identifier(&self) -> &str {
+        &self.identifier
+    }
 }
 
 // Define a class to manage subjects and their observers.
@@ -185,31 +224,34 @@ pub struct Subject {
     observers: Vec<Arc<dyn Observer + Send + Sync>>,
 }
 
-// Implementation for Subject.
 impl Subject {
-    // Constructor for Subject, initializing an empty list of observers.
     pub fn new() -> Self {
         Self {
             observers: Vec::new(),
         }
     }
 
-    // Method to add observers to the Subject.
     pub fn add_observer(&mut self, observer: Arc<dyn Observer + Send + Sync>) {
         self.observers.push(observer);
     }
 
-    // Notify all observers about an order.
+    pub fn remove_observer(&mut self, identifier: &str) {
+        self.observers.retain(|observer| observer.get_identifier() != identifier);
+    }
+
     pub async fn notify_observers(&self, order: &Order) {
         let mut handles = vec![];
         for observer in &self.observers {
-            handles.push(observer.notify(order));
+            if observer.is_interested(order) {
+                handles.push(observer.notify(order));
+            }
         }
 
         for handle in handles {
             handle.await.unwrap();
         }
     }
+ 
 
 
     pub async fn place_order(&mut self, order: Order) {
