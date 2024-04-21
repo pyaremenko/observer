@@ -32,7 +32,7 @@ The code defines several structs:
 
 2. Navigate to the project directory.
    ```bash
-   cd order-processing-system
+   cd observer
    ```
 
 3. Build and run the project.
